@@ -8,15 +8,18 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default defineConfig([
-  { files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'] },
+  { ignores: ['.react-router/**'] },
   {
     files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'],
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
+    ...js.configs.recommended,
   },
-  { files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'], plugins: { js }, extends: ['js/recommended'] },
-  { files: ['**/*.css'], language: 'css/css' },
-  { files: ['**/*.css'], languageOptions: { customSyntax: tailwindSyntax } },
-  { files: ['**/*.css'], plugins: { css }, extends: ['css/recommended'] },
+  {
+    files: ['**/*.css'],
+    language: 'css/css',
+    languageOptions: { customSyntax: tailwindSyntax },
+    ...css.configs.recommended,
+  },
   tseslint.configs.recommended,
   pluginReact.configs.flat.recommended,
   pluginReact.configs.flat['jsx-runtime'],
