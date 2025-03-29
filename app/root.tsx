@@ -1,27 +1,22 @@
+import clsx from 'clsx'
 import {
   isRouteErrorResponse,
   Links,
   Meta,
-  NavLink,
   Outlet,
   Scripts,
   ScrollRestoration,
   useLoaderData,
 } from 'react-router'
-
-import clsx from 'clsx'
 import { PreventFlashOnWrongTheme, ThemeProvider, useTheme } from 'remix-themes'
 import '~/app.css'
+import DisplayMode from '~/components/display-mode'
+import { ModeToggle } from '~/components/mode-toggle'
 import { Dialog } from '~/components/ui/dialog'
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-} from '~/components/ui/navigation-menu'
+import { NavigationMenu, NavigationMenuList } from '~/components/ui/navigation-menu'
 import { themeSessionResolver } from '~/sessions.server'
 import type { Route } from './+types/root'
+import NewDataDialog from './components/data-dialog'
 
 export const links: Route.LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -36,25 +31,32 @@ export const links: Route.LinksFunction = () => [
   },
 ]
 
-export function Layout({ children }: { children: React.ReactNode }) {
+function ThemedLayout({ children }: { children: React.ReactNode }) {
   const data = useLoaderData<typeof loader>()
   const [theme] = useTheme()
   return (
+    <html lang="en" className={clsx(theme)}>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <Meta />
+        <PreventFlashOnWrongTheme ssrTheme={!!data.theme} />
+        <Links />
+      </head>
+      <body>
+        {children}
+        <ScrollRestoration />
+        <Scripts />
+      </body>
+    </html>
+  )
+}
+
+export function Layout({ children }: { children: React.ReactNode }) {
+  const data = useLoaderData<typeof loader>()
+  return (
     <ThemeProvider specifiedTheme={data.theme} themeAction="/action/set-theme">
-      <html lang="en" className={clsx(theme)}>
-        <head>
-          <meta charSet="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <Meta />
-          <PreventFlashOnWrongTheme ssrTheme={!!data.theme} />
-          <Links />
-        </head>
-        <body>
-          {children}
-          <ScrollRestoration />
-          <Scripts />
-        </body>
-      </html>
+      <ThemedLayout>{children}</ThemedLayout>
     </ThemeProvider>
   )
 }
@@ -65,7 +67,28 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function App() {
-  return <Outlet />
+  return (
+    <Dialog>
+      <NavigationMenu className="p-2">
+        <NavigationMenuList className="flex w-screen justify-center">
+          <DisplayMode href="/">Text</DisplayMode>
+          <DisplayMode href="/visual">Visual</DisplayMode>
+          <NewDataDialog />
+        </NavigationMenuList>
+      </NavigationMenu>
+      <div className="absolute end-2 top-2">
+        <ModeToggle />
+      </div>
+      <Outlet />
+    </Dialog>
+  )
+}
+
+export function meta() {
+  return [
+    { title: 'Flight monitor' },
+    { name: 'description', content: 'Flight data diplay made with react router' },
+  ]
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
